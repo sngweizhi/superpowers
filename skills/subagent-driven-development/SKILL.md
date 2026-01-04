@@ -11,29 +11,13 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
-    "Stay in this session?" [shape=diamond];
-    "subagent-driven-development" [shape=box];
-    "executing-plans" [shape=box];
-    "Manual execution or brainstorm first" [shape=box];
+Use this skill when you have an implementation plan with independent tasks to execute.
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Stay in this session?" -> "subagent-driven-development" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
-}
-```
+**Key characteristics:**
 
-**vs. Executing Plans (parallel session):**
-- Same session (no context switch)
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
-- Faster iteration (no human-in-loop between tasks)
+- Fast iteration within the same session
 
 ## The Process
 
@@ -167,23 +151,21 @@ Done!
 ## Advantages
 
 **vs. Manual execution:**
+
 - Subagents follow TDD naturally
 - Fresh context per task (no confusion)
 - Parallel-safe (subagents don't interfere)
 - Subagent can ask questions (before AND during work)
 
-**vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
-
 **Efficiency gains:**
+
 - No file reading overhead (controller provides full text)
 - Controller curates exactly what context is needed
 - Subagent gets complete information upfront
 - Questions surfaced before work begins (not after)
 
 **Quality gates:**
+
 - Self-review catches issues before handoff
 - Two-stage review: spec compliance, then code quality
 - Review loops ensure fixes actually work
@@ -191,6 +173,7 @@ Done!
 - Code quality ensures implementation is well-built
 
 **Cost:**
+
 - More subagent invocations (implementer + 2 reviewers per task)
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
@@ -199,6 +182,7 @@ Done!
 ## Red Flags
 
 **Never:**
+
 - Skip reviews (spec compliance OR code quality)
 - Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
@@ -212,29 +196,70 @@ Done!
 - Move to next task while either review has open issues
 
 **If subagent asks questions:**
+
 - Answer clearly and completely
 - Provide additional context if needed
 - Don't rush them into implementation
 
 **If reviewer finds issues:**
+
 - Implementer (same subagent) fixes them
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
 
 **If subagent fails task:**
+
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
 
 ## Integration
 
 **Required workflow skills:**
+
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
+
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
 
-**Alternative workflow:**
-- **superpowers:executing-plans** - Use for parallel session instead of same-session execution
+## Subagent Mapping (for Oh-My-OpenCode)
+
+**CRITICAL:** When executing this skill, YOU (the orchestrator) dispatch subagents and manage the workflow. Subagents do focused work; you coordinate.
+
+### Role-to-Agent Mapping
+
+| Role                  | Agent    | Dispatch Command                                                                |
+| --------------------- | -------- | ------------------------------------------------------------------------------- |
+| Implementer           | `build`  | `task(agent="build", prompt="[full task text + context]")`                      |
+| Spec Reviewer         | `oracle` | `task(agent="oracle", prompt="Spec review: [task spec] vs [diff/changes]")`     |
+| Code Quality Reviewer | `oracle` | `task(agent="oracle", prompt="Code quality review: [git diff or files]")`       |
+| Final Reviewer        | `oracle` | `task(agent="oracle", prompt="Holistic review: [full implementation summary]")` |
+
+### Why This Mapping
+
+- **`build` for implementation**: Has write/edit/bash permissions, follows TDD
+- **`oracle` for reviews**: Read-only, high reasoning capability, no accidental modifications
+
+### Orchestrator Responsibilities
+
+You (Sisyphus/primary agent) are the **controller**. You MUST:
+
+1. **Read the plan once** and extract ALL tasks with full text
+2. **Create todowrite** with all tasks before starting
+3. **Dispatch implementer** per task via `task(agent="build", ...)`
+4. **Answer questions** if implementer asks (provide context, don't rush)
+5. **Dispatch spec reviewer** after implementation completes
+6. **Dispatch code quality reviewer** after spec passes
+7. **Manage iteration loops** (reviewer rejects → implementer fixes → re-review)
+8. **Mark todos complete** as each task passes both reviews
+9. **Dispatch final reviewer** after all tasks complete
+
+**DO NOT:**
+
+- Delegate orchestration to subagents (you are the controller)
+- Implement code yourself (dispatch `build` agent instead)
+- Skip reviews or proceed with open issues
+- Dispatch parallel implementers on the same task

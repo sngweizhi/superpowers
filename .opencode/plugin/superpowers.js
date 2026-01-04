@@ -30,15 +30,15 @@ export const SuperpowersPlugin = async ({ client, directory }) => {
     const content = skillsCore.stripFrontmatter(fullContent);
 
     const toolMapping = compact
-      ? `**Tool Mapping:** TodoWrite->update_plan, Task->@mention, Skill->use_skill
+      ? `**Tool Mapping:** TodoWrite->todowrite, Task->task()/background_task(), Skill->use_skill
 
 **Skills naming (priority order):** project: > personal > superpowers:`
-      : `**Tool Mapping for OpenCode:**
-When skills reference tools you don't have, substitute OpenCode equivalents:
-- \`TodoWrite\` → \`update_plan\`
-- \`Task\` tool with subagents → Use OpenCode's subagent system (@mention)
+      : `**Tool Mapping:**
+When skills reference tools you don't have, use these equivalents:
+- \`TodoWrite\` → \`todowrite\`
+- \`Task(...)\` → \`task(agent="...", prompt="...")\` for sync, \`background_task(...)\` for async
 - \`Skill\` tool → \`use_skill\` custom tool
-- \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
+- \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools work identically
 
 **Skills naming (priority order):**
 - Project skills: \`project:skill-name\` (in .opencode/skills/)
@@ -191,8 +191,8 @@ ${toolMapping}
       // Extract sessionID from various event structures
       const getSessionID = () => {
         return event.properties?.info?.id ||
-               event.properties?.sessionID ||
-               event.session?.id;
+          event.properties?.sessionID ||
+          event.session?.id;
       };
 
       // Inject bootstrap at session creation (before first user message)
