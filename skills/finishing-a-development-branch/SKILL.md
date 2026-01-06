@@ -13,6 +13,20 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Delegation Requirement
+
+**MANDATORY:** The orchestrator agent MUST delegate this entire skill workflow to the **Oracle** subagent.
+
+```
+task(
+  subagent_type="oracle",
+  description="Complete development branch workflow",
+  prompt="Use the finishing-a-development-branch skill to guide completion of the current branch. Follow all steps: verify tests, present options, execute user's choice, and cleanup."
+)
+```
+
+**Why Oracle?** This workflow involves critical decisions (merge, PR, discard) that benefit from Oracle's deep reasoning and careful verification before executing irreversible git operations.
+
 ## The Process
 
 ### Step 1: Verify Tests

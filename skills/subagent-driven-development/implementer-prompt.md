@@ -3,7 +3,7 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Task tool (general-purpose):
+Task tool (agent: builder):
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]
@@ -15,6 +15,12 @@ Task tool (general-purpose):
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]
+
+    ## Required Skills
+
+    Use `superpowers:test-driven-development` for all implementation. Read it before writing any code.
+
+    **The Iron Law:** No production code without a failing test first.
 
     ## Before You Begin
 
@@ -30,7 +36,7 @@ Task tool (general-purpose):
 
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
-    2. Write tests (following TDD if task says to)
+    2. Follow TDD: RED (failing test) → GREEN (minimal code) → REFACTOR
     3. Verify implementation works
     4. Commit your work
     5. Self-review (see below)
@@ -60,10 +66,10 @@ Task tool (general-purpose):
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
 
-    **Testing:**
-    - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDD if required?
-    - Are tests comprehensive?
+    **Testing (TDD discipline):**
+    - Did I write every test BEFORE the code that makes it pass?
+    - Did I watch each test fail first?
+    - Do tests verify real behavior (not mock behavior)?
 
     If you find issues during self-review, fix them now before reporting.
 

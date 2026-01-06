@@ -68,9 +68,9 @@ digraph process {
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- [implementer-prompt.md](./implementer-prompt.md) - Dispatch implementer subagent
+- [spec-reviewer-prompt.md](./spec-reviewer-prompt.md) - Dispatch spec compliance reviewer subagent
+- [code-quality-reviewer-prompt.md](./code-quality-reviewer-prompt.md) - Dispatch code quality reviewer subagent
 
 ## Example Workflow
 
@@ -231,12 +231,12 @@ Done!
 
 ### Role-to-Agent Mapping
 
-| Role                  | Agent    | Dispatch Command                                                                |
-| --------------------- | -------- | ------------------------------------------------------------------------------- |
-| Implementer           | `build`  | `task(agent="build", prompt="[full task text + context]")`                      |
-| Spec Reviewer         | `oracle` | `task(agent="oracle", prompt="Spec review: [task spec] vs [diff/changes]")`     |
-| Code Quality Reviewer | `oracle` | `task(agent="oracle", prompt="Code quality review: [git diff or files]")`       |
-| Final Reviewer        | `oracle` | `task(agent="oracle", prompt="Holistic review: [full implementation summary]")` |
+| Role                  | Agent    | Dispatch Command                                                                   |
+| --------------------- | -------- | ---------------------------------------------------------------------------------- |
+| Implementer           | `build`  | `task(agent="build", prompt="[Use template: ./implementer-prompt.md]")`            |
+| Spec Reviewer         | `oracle` | `task(agent="oracle", prompt="[Use template: ./spec-reviewer-prompt.md]")`         |
+| Code Quality Reviewer | `oracle` | `task(agent="oracle", prompt="[Use template: ./code-quality-reviewer-prompt.md]")` |
+| Final Reviewer        | `oracle` | `task(agent="oracle", prompt="Holistic review: [full implementation summary]")`    |
 
 ### Why This Mapping
 

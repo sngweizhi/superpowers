@@ -195,10 +195,18 @@ ${toolMapping}
           event.session?.id;
       };
 
+      const isSubagent = () => {
+        return !!(
+          event.properties?.info?.parentID ||
+          event.properties?.parentID ||
+          event.session?.parentID
+        );
+      };
+
       // Inject bootstrap at session creation (before first user message)
       if (event.type === 'session.created') {
         const sessionID = getSessionID();
-        if (sessionID) {
+        if (sessionID && !isSubagent()) {
           await injectBootstrap(sessionID, false);
         }
       }
@@ -206,7 +214,7 @@ ${toolMapping}
       // Re-inject bootstrap after context compaction (compact version to save tokens)
       if (event.type === 'session.compacted') {
         const sessionID = getSessionID();
-        if (sessionID) {
+        if (sessionID && !isSubagent()) {
           await injectBootstrap(sessionID, true);
         }
       }

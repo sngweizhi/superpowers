@@ -71,13 +71,21 @@ API docs, syntax guides, tool documentation (office docs)
 
 ## Directory Structure
 
+**CRITICAL: Every skill MUST be in its own folder with `SKILL.md` as the main file.**
 
 ```
+# ✅ CORRECT: Skill in folder with SKILL.md
 skills/
-  skill-name/
+  my-skill/
     SKILL.md              # Main reference (required)
     supporting-file.*     # Only if needed
+
+# ❌ WRONG: Standalone .md file (will NOT be discovered)
+skills/
+  my-skill.md             # NEVER do this - not a valid skill
 ```
+
+**Why folders?** The skill loader looks for `*/SKILL.md` pattern. Standalone `.md` files are invisible to skill discovery.
 
 **Flat namespace** - all skills in one searchable namespace
 
@@ -92,48 +100,65 @@ skills/
 
 ## SKILL.md Structure
 
-**Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
-  - Start with "Use when..." to focus on triggering conditions
-  - Include specific symptoms, situations, and contexts
-  - **NEVER summarize the skill's process or workflow** (see CSO section for why)
-  - Keep under 500 characters if possible
+**Skills follow the [Agent Skills open standard](https://agentskills.io) supported by Claude Code, Cursor, OpenCode, and others.**
+
+### Frontmatter (YAML)
+
+**Required fields:**
+
+| Field | Constraints | Purpose |
+|-------|-------------|---------|
+| `name` | 1-64 chars, **lowercase** letters/numbers/hyphens only, no leading/trailing/consecutive hyphens, **must match directory name** | Unique identifier |
+| `description` | 1-1024 chars, start with "Use when...", third-person, **never summarize workflow** | Discovery trigger |
+
+**Optional fields:**
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `license` | License identifier | `"Apache-2.0"` |
+| `compatibility` | Environment requirements (max 500 chars) | `"Requires Node.js 18+"` |
+| `metadata` | Arbitrary key-value pairs | `author: "team"`, `version: "1.0"` |
+| `allowed-tools` | Pre-approved tools (experimental) | `"Read, Bash(python:*)"` |
+| `model` | Preferred model for this skill | `"claude-sonnet-4-20250514"` |
+
+**Validation rules:**
+- YAML must start on line 1 with `---`
+- No blank lines before opening `---`
+- Use spaces for indentation (not tabs)
+- Cannot use reserved words "anthropic" or "claude" in `name`
+
+### Content Guidelines
+
+**Keep SKILL.md under 500 lines.** Use progressive disclosure:
+- Core instructions in SKILL.md
+- Heavy reference (100+ lines) → separate files
+- Detailed examples → linked files loaded on demand
 
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
-description: Use when [specific triggering conditions and symptoms]
+name: pdf-processing
+description: Use when working with PDF files, extracting text, filling forms, or merging documents.
+allowed-tools: Read, Bash(python:*)
 ---
 
-# Skill Name
+# PDF Processing
 
 ## Overview
 What is this? Core principle in 1-2 sentences.
 
 ## When to Use
-[Small inline flowchart IF decision non-obvious]
-
 Bullet list with SYMPTOMS and use cases
 When NOT to use
-
-## Core Pattern (for techniques/patterns)
-Before/after code comparison
 
 ## Quick Reference
 Table or bullets for scanning common operations
 
 ## Implementation
 Inline code for simple patterns
-Link to file for heavy reference or reusable tools
+Link to file for heavy reference: See [REFERENCE.md](REFERENCE.md)
 
 ## Common Mistakes
 What goes wrong + fixes
-
-## Real-World Impact (optional)
-Concrete results
 ```
 
 
@@ -346,30 +371,51 @@ You're good at porting - one great example is enough.
 
 ## File Organization
 
-### Self-Contained Skill
-```
-defense-in-depth/
-  SKILL.md    # Everything inline
-```
-When: All content fits, no heavy reference needed
+Skills are **multi-file packages**, not just markdown. Structure by complexity:
 
-### Skill with Reusable Tool
+### Minimal Skill (instructions only)
+```
+my-skill/
+└── SKILL.md    # Everything inline
+```
+
+### Skill with Supporting Files
 ```
 condition-based-waiting/
-  SKILL.md    # Overview + patterns
-  example.ts  # Working helpers to adapt
+├── SKILL.md              # Overview + patterns
+├── example.ts            # Working code to adapt
+└── helper.sh             # Automation script
 ```
-When: Tool is reusable code, not just narrative
 
-### Skill with Heavy Reference
+### Complex Skill with Heavy Reference
 ```
-pptx/
-  SKILL.md       # Overview + workflows
-  pptxgenjs.md   # 600 lines API reference
-  ooxml.md       # 500 lines XML structure
-  scripts/       # Executable tools
+pdf-processing/
+├── SKILL.md              # Overview + workflows (<500 lines)
+├── scripts/
+│   ├── extract.py        # Executable tools
+│   └── merge.py
+├── references/
+│   ├── REFERENCE.md      # API documentation
+│   └── FORMS.md          # Form-filling guide
+└── assets/
+    └── template.xlsx     # Reusable templates
 ```
-When: Reference material too large for inline
+
+### Supported File Types
+
+| Type | Examples | Use For |
+|------|----------|---------|
+| **Markdown** | `REFERENCE.md`, `GUIDE.md` | Heavy documentation, API refs |
+| **Scripts** | `.py`, `.sh`, `.js`, `.ts` | Automation, helpers, tools |
+| **Templates** | `.dot`, `.xlsx`, `.json` | Reusable starting points |
+| **Code examples** | `.ts`, `.tsx`, `.go` | Working implementations |
+| **Logs** | `CREATION-LOG.md` | Skill evolution history |
+
+**File references:** Use relative paths with forward slashes (cross-platform):
+```markdown
+See [reference](references/guide.md)
+Run: `python scripts/helper.py`
+```
 
 ## The Iron Law (Same as TDD)
 
@@ -603,10 +649,12 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Identify patterns in rationalizations/failures
 
 **GREEN Phase - Write Minimal Skill:**
-- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
+- [ ] Skill in folder: `skill-name/SKILL.md` (not standalone `.md`)
+- [ ] Name: 1-64 chars, lowercase, letters/numbers/hyphens only, matches folder name
+- [ ] YAML frontmatter with `name` and `description` (optional: license, metadata, etc.)
 - [ ] Description starts with "Use when..." and includes specific triggers/symptoms
-- [ ] Description written in third person
+- [ ] Description written in third person, never summarizes workflow
+- [ ] SKILL.md under 500 lines (use separate files for heavy content)
 - [ ] Keywords throughout for search (errors, symptoms, tools)
 - [ ] Clear overview with core principle
 - [ ] Address specific baseline failures identified in RED
